@@ -139,11 +139,16 @@ class Command {
      * @throws CommandNotFoundException
      * @throws NonExecutableCommandException
      * @throws UnknownException
+     * @throws NoExecFunctionException
      */
     public function execute ()
     {
         // get command
         $command = $this->getCommand();
+
+        // sanity check
+        if (!function_exists('exec'))
+            throw new NoExecFunctionException("the command cannot be executed because the exec() function is not available.\nYou can attempt to execute the command manually:\n\n$command");
 
         // log
         if ($this->logging)

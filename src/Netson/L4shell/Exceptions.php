@@ -32,4 +32,9 @@ class InvalidNumberOfArgumentsException extends Exception {};
  * thrown when getCommand() is called without setting the command first
  */
 class CommandNotSetException extends Exception {};
+
+/**
+ * thrown when the exec() function is unavailable
+ */
+class NoExecFunctionException extends Exception {};
 ?>
