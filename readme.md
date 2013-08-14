@@ -86,6 +86,18 @@ $command = L4shell::get();
 $result = $command->setLogging(true)->setCommand("hostname")->execute();
 ```
 
+**Prevent certain characters from being escaped**
+
+When you have a specific shell command which requires the use of characters that would normally be escaped by the ``` escapeshellcmd()``` or ```escapeshellarg()``` functions, you can use the ```setAllowedCharacters()``` method. This method accepts an array of characters that will not be escaped by L4shell:
+
+```php
+$command = L4shell::setCommand('find ./ -maxdepth 1 -name %s')->setArguments(array("*.txt"))->setAllowedCharacters(array("*"));
+// returned with allowed characters: find ./ -maxdepth 1 -name '*.txt'
+// returned without allowed characters: find ./ -maxdepth 1 -name '\*.txt'
+```
+
+**SINCE THIS METHOD COMPLETELY CIRCUMVENTS THE ESCAPING OF POTENTIALLY DANGEROUS CHARACTERS, USE THIS METHOD WITH THE UTMOST CAUTION!!**
+
 ## Unit testing ##
 
 Unit testing your modules/packages when using L4shell is easy. Simply use Mockery style calls in your tests:
