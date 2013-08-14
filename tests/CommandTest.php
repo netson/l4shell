@@ -254,6 +254,16 @@ class CommandTest extends Orchestra\Testbench\TestCase {
 
     }
 
+    public function testAllowUnescapedCharacters ()
+    {
+        Log::shouldReceive('info')->times(3);
+        Log::shouldReceive('error')->never();
+        $command = L4shell::setCommand('find ./ -maxdepth 1 -name %s')->setArguments(array("*.txt"))->setAllowedCharacters(array("*"));
+        $expected = "find ./ -maxdepth 1 -name '*.txt'";
+
+        $this->assertEquals($expected, $command->getCommand());
+    }
+
     public function tearDown ()
     {
         \Mockery::close();

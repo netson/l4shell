@@ -51,6 +51,13 @@ class Command {
     protected $devnull = "";
 
     /**
+     * array that holds allowed characters which will NOT be escaped
+     *
+     * @var array
+     */
+    protected $allowed_characters = array();
+
+    /**
      * constructor method
      * accepts an optional $locale, otherwise the default will be used
      *
@@ -174,20 +181,20 @@ class Command {
         switch ($this->exit_status)
         {
             case 2:
-                Log::error("The given command was used incorrectly (exit status 2)", array("l4shell"));
-                throw new InvalidUsageException("The given command was used incorrectly (exit status 2)");
+                Log::error("The given command was used incorrectly (exit status 2) - [{$command}]", array("l4shell"));
+                throw new InvalidUsageException("The given command was used incorrectly (exit status 2) - [{$command}]");
                 break;
             case 127:
-                Log::error("The given command could not be found (exit status 127)", array("l4shell"));
-                throw new CommandNotFoundException("The given command could not be found (exit status 127)");
+                Log::error("The given command could not be found (exit status 127) - [{$command}]", array("l4shell"));
+                throw new CommandNotFoundException("The given command could not be found (exit status 127) - [{$command}]");
                 break;
             case 126:
-                Log::error("The given command is not executable (exit status 126)", array("l4shell"));
-                throw new NonExecutableCommandException("The given command is not executable (exit status 126)");
+                Log::error("The given command is not executable (exit status 126) - [{$command}]", array("l4shell"));
+                throw new NonExecutableCommandException("The given command is not executable (exit status 126) - [{$command}]");
                 break;
             default:
-                Log::error("The given command could not be executed (exit status {$this->exit_status})", array("l4shell"));
-                throw new UnknownException("The given command could not be executed (exit status {$this->exit_status})");
+                Log::error("The given command could not be executed (exit status {$this->exit_status}) - [{$command}]", array("l4shell"));
+                throw new UnknownException("The given command could not be executed (exit status {$this->exit_status}) - [{$command}]");
                 break;
         }
 
@@ -215,12 +222,13 @@ class Command {
     public function sendToDevNull ($enable = true)
     {
         if ($enable === true)
-            $this->devnull = "> /dev/null 2>&1";
+            $this->devnull = " > /dev/null 2>&1";
         else
             $this->devnull = "";
 
         // allow object chaining
         return $this;
+
     }
 
     /**
@@ -243,7 +251,10 @@ class Command {
             throw new CommandNotSetException("A valid command has not been set; please set a oommand using the setCommand() method");
 
         // replace argument placeholder with escaped argument
-        return vsprintf($this->command, $this->arguments) . $this->devnull;
+        $command = vsprintf($this->command, $this->arguments) . $this->devnull;
+
+        // check for allowed characters
+        return $this->unescapeAllowedCharacters($command);
 
     }
 
@@ -255,6 +266,51 @@ class Command {
     public function __toString ()
     {
         return (string) $this->getCommand();
+
+    }
+
+    /**
+     * method to set allowed characters; these characters will NOT be escaped
+     * this can be useful when you, for example want to pass an asterisk as an argument without it being escaped
+     * USE WITH CUATION!
+     *
+     * @param array $characters
+     * @return \Netson\L4shell\Command
+     */
+    public function setAllowedCharacters (array $characters = array())
+    {
+        // log this activity and print to screen
+        Log::info("Setting allowed characters: " . implode(" - ", $characters), array("l4shell"));
+
+        // set characters
+        $this->allowed_characters = $characters;
+
+        // return object to allow chaining
+        return $this;
+
+    }
+
+    /**
+     * method to allow certain characters; these will NOT be escaped
+     * USE WITH CAUTION!!
+     *
+     * @param string $command
+     * @return string
+     */
+    protected function unescapeAllowedCharacters ($command)
+    {
+        // loop through all allowed characters to unescape them
+        foreach ($this->allowed_characters as $char)
+        {
+            // set escaped character
+            $esc = "\\" . $char;
+
+            // replace escaped version with unescaped version
+            $command = str_replace($esc, $char, $command);
+        }
+
+        // return command
+        return $command;
 
     }
 
