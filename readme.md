@@ -15,7 +15,7 @@ Or add the requirement to the composer.json file manually:
 
 ```
 "require": {
-     "netson/l4shell": "1.0.x"
+     "netson/l4shell": "1.2.x"
 }
 ```
 
