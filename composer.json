@@ -5,7 +5,7 @@
     "homepage": "https://github.com/netson/l4shell",
     "keywords": ["laravel", "shell", "exec"],
     "license": "MIT",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "authors": [
         {
             "name": "rsonnenberg",
