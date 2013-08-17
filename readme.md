@@ -19,6 +19,20 @@ Or add the requirement to the composer.json file manually:
 }
 ```
 
+After the package has been successfully loaded, you have to add it to the Service Providers array:
+```php
+// app/config/app.php
+'providers' => array(
+	...
+	'Netson\L4shell\L4shellServiceProvider',
+);
+```
+
+An alias is automatically registered by the Service Provider, but in case you're wondering, this is it:
+```php
+'L4shell' => 'Netson\L4shell\Facades\Command'
+```
+
 ## Usage ##
 
 This package escapes both the entire command (using escapeshellcmd()) and each individual argument (using escapdeshellarg()). Almost all methods allow object chaining for easy setup.
