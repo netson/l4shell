@@ -37,4 +37,19 @@ class CommandNotSetException extends Exception {};
  * thrown when the exec() function is unavailable
  */
 class NoExecFunctionException extends Exception {};
+
+/**
+ * thrown when attempting to set an execution path that does not exist
+ */
+class ExecutionPathNotFoundException extends Exception {};
+
+/**
+ * thrown when attempting to set an execution path that does not exist
+ */
+class ExecutablePathNotFoundException extends Exception {};
+
+/**
+ * thrown when attempting to set a working directory which does not exuist or which you don't have access to
+ */
+class WorkingDirectoryCouldNotBeSetException extends Exception {};
 ?>

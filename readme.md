@@ -37,7 +37,7 @@ An alias is automatically registered by the Service Provider, but in case you're
 
 This package escapes both the entire command (using escapeshellcmd()) and each individual argument (using escapdeshellarg()). Almost all methods allow object chaining for easy setup.
 
-**Initializing a new command:**
+### Initializing a new command: ###
 
 This can be done via the shortcut registered in the Service Provider:
 
@@ -50,7 +50,7 @@ $command = new \Netson\L4shell\Command("command", array("arg1", "arg2"));
 ```
 Using the get() method will initialize an empty command object and requires you to use the setCommand() and setArguments() method (optional) before the command can be executed.
 
-**Sample command: without arguments:**
+### Sample command: without arguments ###
 
 ```php
 $command = L4shell::get();
@@ -58,7 +58,7 @@ $result = $command->setCommand('hostname')->execute();
 ```
 If the command was executed successfully, the output of the command will be returned. If the command could not be executed, an exception will be thrown, including the error message from the command (except when using the sendToDevNull() method; see below).
 
-**Sample command: with arguments:**
+### Sample command: with arguments ###
 
 When adding arguments, make sure you add the correct number of placeholder (sprintf-format), otherwise an Exception will be thrown.
 
@@ -67,7 +67,7 @@ $command = L4shell::get();
 $result = $command->setCommand('hostname %s')->setArguments(array("-s"))->execute();
 ```
 
-**Sample command: send output to /dev/null**
+### Sample command: send output to /dev/null ###
 
 The package has an easy way of sending output from commands to /dev/null since quite often you may only be interested in the exit status, and not the output text. Sending output to /dev/null will render any output messages useless, but the exit code will off course still be available and exceptions will be thrown when errors occur.
 
@@ -76,7 +76,7 @@ $command = L4shell::get();
 $result = $command->setCommand("hostname")->sendToDevNull()->execute(); // will return exit code (0), but no output message
 ```
 
-**Sample command: enable logging of all commands**
+### Sample command: enable logging of all commands ###
 
 L4shell allows you to easily log all calls to shell commands to the default laravel log. By default, logging is **enabled**. Logging uses the default Laravel 4 logging package ([Monolog](http://laravel.com/docs/errors#logging "Monolog")). 
 
@@ -100,7 +100,45 @@ $command = L4shell::get();
 $result = $command->setLogging(true)->setCommand("hostname")->execute();
 ```
 
-**Prevent certain characters from being escaped**
+### Setting and unsetting the execution path ###
+
+In case you wish to execute your command from within a particular directory, you can use the following method:
+
+```php
+$command = L4shell::get();
+$result = $command->setExecutionPath("/path/to/your/folder")->setCommand("ls")->execute();
+```
+
+The execution path is a static variable, which in this case means that the execution path, if set only once, will affect **ALL** commands executed thereafter.
+
+**NOTE:** *The execution path is changed right before executing the command, and is changed back to the original setting right after the command has been executed. This way you don't have to remember to revert the working directory and it won't mess up any other scripts running after this one.*
+
+If you wish to unset the execution path, simply call the method without any parameters:
+
+```php
+$command = L4shell::get();
+$result = $command->setExecutionPath()->setCommand("ls")->execute();
+```
+
+### Setting and unsetting the executable path ###
+
+In case the folder containing your executables is not in the path of the user executing the command, you can use the following method:
+
+```php
+$command = L4shell::get();
+$result = $command->setExecutablePath("/usr/bin")->setCommand("ls")->execute();
+```
+This will effectively change your command from simply ```$ ls``` to ```$ /usr/bin/ls```.
+This is also a static variable, meaning that the setting will persist across commands.
+
+If you wish to unset the executable path (for example to run a command from a local directory), simply call the method without any parameters:
+
+```php
+$command = L4shell::get();
+$result = $command->setExecutablePath()->setCommand("ls")->execute();
+```
+
+### Prevent certain characters from being escaped ###
 
 When you have a specific shell command which requires the use of characters that would normally be escaped by the ``` escapeshellcmd()``` or ```escapeshellarg()``` functions, you can use the ```setAllowedCharacters()``` method. This method accepts an array of characters that will not be escaped by L4shell:
 

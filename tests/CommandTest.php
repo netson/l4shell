@@ -18,6 +18,13 @@ class CommandTest extends Orchestra\Testbench\TestCase {
 
     }
 
+    public function setUp ()
+    {
+        parent::setUp();
+        L4shell::setLogging(true);
+
+    }
+
     public function testConstructorReturnsClassObject ()
     {
         Log::shouldReceive('info', 'error')->never();
@@ -262,6 +269,97 @@ class CommandTest extends Orchestra\Testbench\TestCase {
         $expected = "find ./ -maxdepth 1 -name '*.txt'";
 
         $this->assertEquals($expected, $command->getCommand());
+
+    }
+
+    public function testSetExecutionPathThrowsException ()
+    {
+        $this->setExpectedException('Netson\L4shell\ExecutionPathNotFoundException');
+        File::shouldReceive('isDirectory')->once()->andReturn(false);
+
+        L4shell::setExecutionPath('/thisdirectorydoesnotexist');
+
+    }
+
+    public function testSetExecutionPathIsSuccessful ()
+    {
+        File::shouldReceive('isDirectory')->once()->andReturn(true);
+        Log::shouldReceive('info')->once();
+
+        $command = L4shell::setExecutionPath('/');
+        $expected = "/";
+
+        $this->assertEquals($expected, $command->getExecutionPath());
+
+    }
+
+    public function testExecutionPathIsReverted ()
+    {
+        File::shouldReceive('isDirectory')->once()->andReturn(true);
+        Log::shouldReceive('info')->times(6);
+
+        $command = L4shell::setCommand("ls");
+        $expected = $command->getCwd();
+        $command->setExecutionPath("/")->execute();
+
+        $this->assertEquals($expected, $command->getCwd());
+
+    }
+
+    public function testExecutablePathThrowException ()
+    {
+        $this->setExpectedException('Netson\L4shell\ExecutablePathNotFoundException');
+        File::shouldReceive('isDirectory')->once()->andReturn(false);
+
+        L4shell::setExecutablePath('/thisdirectorydoesnotexist');
+
+    }
+
+    public function testSetExecutablePathIsSuccessful ()
+    {
+        File::shouldReceive('isDirectory')->once()->andReturn(true);
+        Log::shouldReceive('info')->once();
+
+        $command = L4shell::setExecutablePath('/');
+        $expected = "/";
+
+        $this->assertEquals($expected, $command->getExecutablePath());
+
+    }
+
+    public function testExecutablePathIsAddedToCommand ()
+    {
+        File::shouldReceive('isDirectory')->once()->andReturn(true);
+        Log::shouldReceive('info')->twice();
+
+        $command = L4shell::setCommand("ls");
+        $command->setExecutablePath("/");
+        $expected = "/ls";
+
+        $this->assertEquals($expected, $command->getCommand());
+
+    }
+
+    public function testExecutionPathIsClearedWhenPassedNull ()
+    {
+        Log::shouldReceive('info')->once();
+
+        $command = L4shell::setExecutionPath();
+
+        $expected = null;
+        $this->assertEquals($expected, $command->getExecutionPath());
+
+    }
+
+    public function testExecutablePathIsClearedWhenPassedNull ()
+    {
+        Log::shouldReceive('info')->once();
+
+        $command = L4shell::setExecutablePath();
+
+        $expected = null;
+        $this->assertEquals($expected, $command->getExecutablePath());
+
     }
 
     public function tearDown ()

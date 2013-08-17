@@ -3,6 +3,7 @@ namespace Netson\L4shell;
 
 use Config;
 use Log;
+use File;
 
 class Command {
 
@@ -56,6 +57,29 @@ class Command {
      * @var array
      */
     protected $allowed_characters = array();
+
+    /**
+     * variable that contains the path which will be cd'd to before executing the command
+     * this variable is static so it remains set across command calls
+     *
+     * @var string
+     */
+    protected static $execution_path = null;
+
+    /**
+     * variable that contains the path where the executable command is supposed to be located
+     * this variable is static so it remains set across command calls
+     *
+     * @var string
+     */
+    protected static $executable_path = null;
+
+    /**
+     * variable that holds the current working directory, before changing to the execution path
+     *
+     * @var string
+     */
+    protected $cwd;
 
     /**
      * constructor method
@@ -157,6 +181,10 @@ class Command {
         if (!function_exists('exec'))
             throw new NoExecFunctionException("the command cannot be executed because the exec() function is not available.\nYou can attempt to execute the command manually:\n\n$command");
 
+        // check if execution folder should be changed
+        if (!is_null($this->getExecutionPath()))
+            $this->setCwd();
+
         // log
         if ($this->logging)
             Log::info("Executing command: " . $command, array("context" => "l4shell"));
@@ -166,6 +194,10 @@ class Command {
 
         // implode result
         $result = implode("\n", $this->result);
+
+        // check if execution folder should be reverted
+        if (!is_null($this->getExecutionPath()))
+            $this->revertCwd();
 
         // check result
         if ($this->exit_status === 0)
@@ -250,6 +282,10 @@ class Command {
         if (is_null($this->command))
             throw new CommandNotSetException("A valid command has not been set; please set a oommand using the setCommand() method");
 
+        // check for executable path
+        if (!is_null($this->getExecutablePath()))
+            $this->command = trim($this->getExecutablePath()) . trim($this->command);
+
         // replace argument placeholder with escaped argument
         $command = vsprintf($this->command, $this->arguments) . $this->devnull;
 
@@ -311,6 +347,137 @@ class Command {
 
         // return command
         return $command;
+
+    }
+
+    /**
+     * method to set a static variable of the path where the command will be executed (cd)
+     *
+     * @param type $path
+     * @return \Netson\L4shell\Command
+     * @throws ExecutionPathNotFoundException
+     */
+    public function setExecutionPath ($path = null)
+    {
+        // sanity check
+        if (!is_null($path) && !File::isDirectory($path))
+            throw new ExecutionPathNotFoundException("The given execution path [$path] does not exist");
+
+        // set execution path
+        self::$execution_path = $path;
+
+        // log
+        if ($this->logging)
+            Log::info("Execution path set to: " . $path, array("context" => "l4shell"));
+
+        // return object to allow chaining
+        return $this;
+
+    }
+
+    /**
+     * method to fetch the execution path
+     *
+     * @return string|null
+     */
+    public function getExecutionPath ()
+    {
+        return self::$execution_path;
+
+    }
+
+    /**
+     * method to set a static variable of the path where the executable(s) is/are located
+     *
+     * @param string $path
+     * @return \Netson\L4shell\Command
+     * @throws ExecutablePathNotFoundException
+     */
+    public function setExecutablePath ($path = null)
+    {
+        // sanity check
+        if (!is_null($path) && !File::isDirectory($path))
+            throw new ExecutablePathNotFoundException("The given executable path [$path] does not exist");
+
+        // set executable path
+        self::$executable_path = $path;
+
+        // log
+        if ($this->logging)
+            Log::info("Executable path set to: " . $path, array("context" => "l4shell"));
+
+        // return object to allow chaining
+        return $this;
+
+    }
+
+    /**
+     * method to return executable path
+     *
+     * @return string|null
+     */
+    public function getExecutablePath ()
+    {
+        return self::$executable_path;
+
+    }
+
+    /**
+     * method to retreive the current working directory
+     *
+     * @return string|boolean
+     */
+    public function getCwd ()
+    {
+        return getcwd();
+
+    }
+
+    /**
+     * method to change the current working directory
+     *
+     * @return string|boolean
+     * @throws WorkingDirectoryCouldNotBeSetException
+     */
+    protected function setCwd ()
+    {
+        // set current working directory
+        $this->cwd = $this->getCwd();
+
+        // path
+        $path = $this->getExecutionPath();
+
+        // change directory
+        if (!chdir($path))
+            throw new WorkingDirectoryCouldNotBeSetException("The working directory [$path] could not be set");
+
+        // log
+        if ($this->logging)
+            Log::info("Changing working directory / execution path to: " . $path, array("context" => "l4shell"));
+
+        // return
+        return $this->getCwd();
+
+    }
+
+    /**
+     * method to change the working directory back to what it was before executing the command
+     *
+     * @return string|boolean
+     * @throws WorkingDirectoryCouldNotBeSetException
+     */
+    protected function revertCwd ()
+    {
+        // change directory
+        if (!chdir($this->cwd))
+            throw new WorkingDirectoryCouldNotBeSetException("The working directory could not be set to the original [$this->cwd]");
+
+        // log
+        if ($this->logging)
+            Log::info("Reverting working directory / execution path to: " . $this->cwd, array("context" => "l4shell"));
+
+        // return
+        return getcwd();
 
     }
 
