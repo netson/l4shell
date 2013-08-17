@@ -8,7 +8,7 @@ This package will **not** work on Windows systems.
 
 Simply use composer:
 
-```$ php composer.phar require netson/l4shell:1.0.* ```
+```$ php composer.phar require netson/l4shell:1.2.* ```
 
 Or add the requirement to the composer.json file manually:
 
