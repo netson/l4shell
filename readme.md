@@ -67,6 +67,23 @@ $command = L4shell::get();
 $result = $command->setCommand('hostname %s')->setArguments(array("-s"))->execute();
 ```
 
+By default, any existing arguments are replaced when you call the setArguments() method to avoid stacking up arguments over a series of sequential commands. However, if you would like to add them in several steps, you can do so by passing a second (optional) boolean parameter to the method:
+
+```php
+$command = L4shell::get();
+$command->setCommand('ls %s %s')->setArguments(array("-a"));
+// do something else ...
+$command->setArguments(array("-l"), true); // add the optional second argument to keep existing arguments
+$result = $command->execute();
+```
+
+If you would like to manually clear any existing arguments, use the following method:
+
+```php
+$command = L4shell::get();
+$command->clearArguments();
+```
+
 ### Sample command: send output to /dev/null ###
 
 The package has an easy way of sending output from commands to /dev/null since quite often you may only be interested in the exit status, and not the output text. Sending output to /dev/null will render any output messages useless, but the exit code will off course still be available and exceptions will be thrown when errors occur.

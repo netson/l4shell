@@ -144,8 +144,12 @@ class Command {
      *
      * @param array $arguments
      */
-    public function setArguments (array $arguments)
+    public function setArguments (array $arguments, $keep_existing_arguments = false)
     {
+        // check to clear existing arguments
+        if (!$keep_existing_arguments)
+            $this->clearArguments();
+
         // sniaty check
         if (count($arguments) > 0)
         {
@@ -157,6 +161,21 @@ class Command {
             if ($this->logging)
                 Log::info("Arguments for command set to: " . implode(" | ", $this->arguments), array("context" => "l4shell"));
         }
+        // return object to allow chaining
+        return $this;
+
+    }
+
+    /**
+     * method to clear any existing arguments
+     *
+     * @return \Netson\L4shell\Command
+     */
+    public function clearArguments ()
+    {
+        // clear existing arguments
+        $this->arguments = array();
+
         // return object to allow chaining
         return $this;
 
@@ -271,7 +290,7 @@ class Command {
     public function getCommand ()
     {
         // counters
-        $argument_count = count($this->arguments);
+        $argument_count = count($this->getArguments());
         $command_count = substr_count($this->command, "%s");
 
         // sanity check
@@ -287,10 +306,22 @@ class Command {
             $this->command = trim($this->getExecutablePath()) . trim($this->command);
 
         // replace argument placeholder with escaped argument
-        $command = vsprintf($this->command, $this->arguments) . $this->devnull;
+        $command = vsprintf($this->command, $this->getArguments()) . $this->devnull;
 
         // check for allowed characters
         return $this->unescapeAllowedCharacters($command);
+
+    }
+
+    /**
+     * method to fetch the set arguments
+     * 
+     * @return array
+     */
+    public function getArguments ()
+    {
+        // return
+        return $this->arguments;
 
     }
 

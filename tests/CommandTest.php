@@ -362,6 +362,63 @@ class CommandTest extends Orchestra\Testbench\TestCase {
 
     }
 
+    public function testSettingMultipleArgumentsInSequenceReturnsObject ()
+    {
+        Log::shouldReceive('info')->never();
+
+        $command = L4shell::get();
+        $command->setLogging(false)
+                ->setArguments(array("arg1"))
+                ->setArguments(array("arg2"), true);
+
+        $this->assertInstanceOf('Netson\L4shell\Command', $command);
+
+    }
+
+    public function testSettingMultipleArgumentsInSequenceIsSuccessful ()
+    {
+        Log::shouldReceive('info')->never();
+
+        $command = L4shell::get();
+        $command->setLogging(false)
+                ->setCommand("ls %s %s")
+                ->setArguments(array("-a"))
+                ->setArguments(array("-l"), true);
+
+        $expected = "ls '-a' '-l'";
+        $this->assertEquals($expected, $command->getCommand());
+        $this->assertCount(2, $command->getArguments());
+
+    }
+
+    public function testSettingSingleArgumentsInSequenceIsSuccessful ()
+    {
+        Log::shouldReceive('info')->never();
+
+        $command = L4shell::get();
+        $command->setLogging(false)
+                ->setCommand("ls %s %s")
+                ->setArguments(array("-a", "-l"))
+                ->setArguments(array("-l", "-a"));
+
+        $expected = "ls '-l' '-a'";
+        $this->assertEquals($expected, $command->getCommand());
+        $this->assertCount(2, $command->getArguments());
+
+    }
+
+    public function testGetArgumentsReturnsArray ()
+    {
+        Log::shouldReceive('info')->never();
+
+        $command = L4shell::get();
+        $command->setLogging(false)
+                ->setArguments(array("-a", "-l"));
+
+        $this->assertInternalType('array', $command->getArguments());
+
+    }
+
     public function tearDown ()
     {
         \Mockery::close();
